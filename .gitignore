@@ -1,0 +1,27 @@
+# ── python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# ── raw / large data (never committed) ──────────────────────────────────────
+*.fc32
+*.dat
+*.npz
+*.npy
+*.yml.bak
+
+# ── local batch outputs ─────────────────────────────────────────────────────
+results/
+output/
+*.log
+
+# ── os / editor ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
