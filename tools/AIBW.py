@@ -26,7 +26,7 @@ import datetime as dt
 import traceback
 
 import sys as _sys, os as _os
-_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+_sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "classical"))
 from pipeline.io import read_data, read_tuning_freq
 from pipeline.stft import stft
 from pipeline.interpolation import interp

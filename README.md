@@ -2,11 +2,15 @@
 
 Estimating the received **signal strength (SNR)** of Doppler-shifted CubeSat
 signals recorded by TU Delft's [DopTrack](https://doptrack.tudelft.nl/) ground
-station, using a **classical spectrogram** estimator.
+station.
 
-The pipeline takes a raw IQ recording plus the DopTrack carrier track, builds a
-short-time Fourier spectrogram, follows the Doppler carrier across the pass, and
-reports a per-frame in-band SNR curve.
+Three independent implementations are collected here, each in its own subfolder:
+
+| Folder | Method | Author |
+|--------|--------|--------|
+| `classical/` | Short-Time Fourier Transform (STFT) spectrogram estimator | — |
+| `wvd/`       | Smoothed Pseudo Wigner-Ville Distribution (SPWVD) | novaciustina |
+| `sst/`       | Synchrosqueezing Transform (SST) | *(coming soon)* |
 
 📊 **[Live results gallery →](https://karol-lub-stack.github.io/doptrack-signal-strength-estimation/)**
 — 255 processed passes across four satellites (Delfi-C3, FUNcube-1, Nayif-1,
@@ -14,7 +18,9 @@ Delfi-n3Xt), each with its spectrogram, SNR curve and metrics.
 
 ---
 
-## How it works
+## Classical STFT estimator (`classical/`)
+
+### How it works
 
 1. **STFT** — the complex baseband recording is transformed with a Hanning-windowed
    short-time Fourier transform (`N = 4096`, 50 % overlap, `fs = 25 kHz`).
@@ -28,82 +34,26 @@ Delfi-n3Xt), each with its spectrogram, SNR curve and metrics.
 5. **SNR** — in-band excess power over noise, integrated across the band per frame.
 6. **Smoothing** — median filter + zero-phase **Butterworth** low-pass.
 
----
-
-## Repository layout
-
-```
-.
-├── pipeline/            core single-pass estimator
-│   ├── io.py              read IQ + carrier track, tuning frequency
-│   ├── stft.py            short-time Fourier transform
-│   ├── interpolation.py   carrier-track interpolation + gap masking
-│   ├── bandwidth.py       occupied-bandwidth estimation
-│   ├── snr.py             per-frame noise floor + SNR
-│   ├── smoothing.py       Savitzky-Golay / Butterworth smoothers
-│   ├── power.py           power helpers
-│   ├── diagnostics.py     alignment checks
-│   └── process_pass.py    orchestrates one pass → result dict
-├── viz/                 plotting
-│   ├── figures.py         spectrogram + SNR figures
-│   └── tests.py           interpolation / bandwidth diagnostics
-├── run_pass.py          ← run the pipeline on a single pass
-├── tools/               batch processing & helpers
-│   ├── Batch.py           process every recording in a data tree
-│   ├── Batch2.py          re-run passes under multiple configs + compare
-│   ├── build_gallery.py   build the docs/ results gallery
-│   ├── extract_snr_curves.py
-│   ├── AIBW.py            bandwidth-parameter optimiser
-│   └── analysis.py        pipeline benchmarking
-└── docs/                GitHub Pages results gallery (static site)
-```
-
-> Raw IQ data (`.fc32`), carrier tracks (`.dat`) and local batch outputs are **not**
-> committed — see `.gitignore`. Point the config paths at your own DopTrack data.
-
----
-
-## Quick start
+### Quick start
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Single pass
-
-Edit the config block in [`run_pass.py`](run_pass.py) (satellite, year, pass id,
-data paths) and run:
+Edit the config block in [`classical/run_pass.py`](classical/run_pass.py) (satellite,
+year, pass id, data paths) and run:
 
 ```bash
-python run_pass.py
+python classical/run_pass.py
 ```
 
-This prints the bandwidth and peak/median SNR and shows the spectrogram + SNR figure.
-
 ### Batch
-
-Edit the paths and parameters at the top of [`tools/Batch.py`](tools/Batch.py),
-then:
 
 ```bash
 python tools/Batch.py
 ```
 
-It writes per-satellite figures, a `summary.csv`, and a live-updating HTML summary.
-
-### Rebuild the results gallery
-
-After a batch run:
-
-```bash
-python tools/build_gallery.py
-```
-
-This web-optimises the figures and regenerates `docs/` (served by GitHub Pages).
-
----
-
-## Pipeline parameters
+### Pipeline parameters
 
 | Parameter      | Default        | Notes                                   |
 |----------------|----------------|-----------------------------------------|
@@ -113,3 +63,65 @@ This web-optimises the figures and regenerates `docs/` (served by GitHub Pages).
 | `smoother`     | `butterworth`  | `savgol`, `butterworth`, or `None`      |
 | `gap_threshold`| `7.0` s        | carrier-track gap masking threshold     |
 | `bw_mode`      | `fixed`        | `fixed` (1200 Hz) or `estimate`         |
+
+---
+
+## WVD estimator (`wvd/`)
+
+Smoothed Pseudo Wigner-Ville Distribution implementation.
+
+**Files included:**
+
+| File | Purpose |
+|------|---------|
+| `SPWVD.py` | Main WVD computation + HDF5 disk streaming + spectrogram plot |
+| `Percentile_snr.py` | Per-chunk SNR via percentile noise floor |
+| `StraightenedSignal.py` | Doppler-shift baseband correction (`straighten_signal`) |
+| `Low_pass_first_order.py` | First-order IIR low-pass smoother for the SNR curve |
+| `MovingAverage.py` | Simple moving-average smoother |
+
+> **Note:** `WaterfallCurveData.py` (provides `update_waterfall_curve`) is a
+> dependency referenced by `SPWVD.py`, `Percentile_snr.py`, and
+> `StraightenedSignal.py`. Add it to `wvd/` when available.
+
+---
+
+## Repository layout
+
+```
+.
++-- classical/           STFT estimator
+|   +-- pipeline/          core modules (io, stft, interpolation, bandwidth, snr, smoothing, ...)
+|   +-- viz/               figures.py, tests.py
+|   +-- run_pass.py        single-pass entry point
++-- wvd/                 SPWVD estimator
+|   +-- SPWVD.py
+|   +-- Percentile_snr.py
+|   +-- StraightenedSignal.py
+|   +-- Low_pass_first_order.py
+|   +-- MovingAverage.py
++-- sst/                 SST estimator (coming soon)
++-- tools/               shared batch tools & helpers
+|   +-- Batch.py
+|   +-- Batch2.py
+|   +-- build_gallery.py
+|   +-- extract_snr_curves.py
+|   +-- AIBW.py
+|   +-- analysis.py
++-- docs/                GitHub Pages results gallery (static site)
+```
+
+> Raw IQ data (`.fc32`), carrier tracks (`.dat`) and local batch outputs are **not**
+> committed — see `.gitignore`. Point the config paths at your own DopTrack data.
+
+---
+
+## Rebuild the results gallery
+
+After a batch run:
+
+```bash
+python tools/build_gallery.py
+```
+
+This web-optimises the figures and regenerates `docs/` (served by GitHub Pages).
