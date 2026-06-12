@@ -20,7 +20,7 @@ from PIL import Image
 # config
 # --------------------------------------------------------------------------- #
 RESULTS_ROOT = r"C:\Users\glute\Desktop\Project Python Folder\Data Dopptrack\results\bwtest"
-REPO_ROOT    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO_ROOT    = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DOCS         = os.path.join(REPO_ROOT, "docs")
 
 THUMB_W = 460     # grid thumbnail width (px)
@@ -101,8 +101,8 @@ def main():
             if not os.path.exists(src):
                 continue
 
-            thumb = os.path.join(DOCS, "thumbs",  sat, name + ".jpg")
-            full  = os.path.join(DOCS, "figures", sat, name + ".jpg")
+            thumb = os.path.join(DOCS, "classical", "thumbs", sat, name + ".jpg")
+            full  = os.path.join(DOCS, "classical", "figures", sat, name + ".jpg")
             total_bytes += optimise(src, thumb, THUMB_W, THUMB_Q)
             total_bytes += optimise(src, full,  FULL_W,  FULL_Q)
 
@@ -126,8 +126,8 @@ def main():
                 interp_n_gaps=fnum(r.get("interp_n_gaps")),
                 bw_test_ok=str(r.get("bw_test_ok", "")).strip().lower() in ("true", "1", "yes"),
                 bw_rel_error=fnum(r.get("bw_rel_error")),
-                thumb=f"thumbs/{sat}/{name}.jpg",
-                full=f"figures/{sat}/{name}.jpg",
+                thumb=f"classical/thumbs/{sat}/{name}.jpg",
+                full=f"classical/figures/{sat}/{name}.jpg",
             ))
 
         n_total += len(kept)
@@ -157,9 +157,9 @@ def main():
     os.makedirs(DOCS, exist_ok=True)
     blob = json.dumps(out, separators=(",", ":"))
     # JSON for tooling, plus a JS shim so the viewer also works opened locally
-    with open(os.path.join(DOCS, "results.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(DOCS, "classical", "results.json"), "w", encoding="utf-8") as fh:
         fh.write(blob)
-    with open(os.path.join(DOCS, "data.js"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(DOCS, "classical", "data.js"), "w", encoding="utf-8") as fh:
         fh.write("window.RESULTS = " + blob + ";")
 
     print(f"\n  {n_total} passes across {len(payload_sats)} satellites")

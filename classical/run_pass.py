@@ -17,9 +17,9 @@ from viz.figures import make_pass_figure
 BASE_IQ  = r"X:\data\L0"
 BASE_DAT = r"X:\data\L1B"
 
-SATELLITE = "Delfi-C3"
-YEAR      = "2020"
-PASS_ID   = "Delfi-C3_32789_202003231040"
+SATELLITE = "FUNcube-1"
+YEAR      = "2026"
+PASS_ID   = "FUNcube-1_39444_202601010247"
 
 # pipeline params (keep in sync with Batch.py)
 F_S          = 25_000

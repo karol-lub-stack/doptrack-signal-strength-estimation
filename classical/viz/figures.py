@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_spectrogram(pwr, t_ax, f_ax, alo, ahi, ax=None, cmap="turbo",
-                     db_floor_pct=60.0, db_ceil_pct=99.5,
+def plot_spectrogram(pwr, t_ax, f_ax, alo, ahi, ax=None, cmap="viridis",
+                     db_floor_pct=60.0, db_ceil_pct=99,
                      f_path=None, t_path=None):
-    """Waterfall spectrogram: time on x-axis, frequency on y-axis.
+    """Waterfall spectrogram: frequency on x-axis, time on y-axis (transposed).
 
     pwr : (N, n_frames) linear power. Plotted in dB with percentile colour limits.
     f_path, t_path : optional Doppler track to overlay (baseband Hz vs s).
@@ -18,19 +18,20 @@ def plot_spectrogram(pwr, t_ax, f_ax, alo, ahi, ax=None, cmap="turbo",
     vmin = np.percentile(pwr_db[finite], db_floor_pct)
     vmax = np.percentile(pwr_db[finite], db_ceil_pct)
 
-    im = ax.imshow(pwr_db, cmap=cmap, aspect="auto", origin="lower",
+    # Transpose: pwr is (n_freq, n_frames); after .T rows=frames, cols=freq
+    im = ax.imshow(pwr_db.T, cmap=cmap, aspect="auto", origin="upper",
                    vmin=vmin, vmax=vmax,
-                   extent=[t_ax.min(), t_ax.max(), f_ax.min(), f_ax.max()])
+                   extent=[f_ax.min(), f_ax.max(), t_ax.max(), t_ax.min()])
 
     plt.colorbar(im, ax=ax, label="power (dB)")
     if f_path is not None and t_path is not None:
-        ax.plot(t_path, f_path, color="red", lw=1.0, label="Doppler track")
-        ax.plot(t_path, f_path + alo, color="white", lw=1.0, ls="--")
-        ax.plot(t_path, f_path + ahi, color="white", lw=1.0, ls="--")
+        ax.plot(f_path, t_path, color="red", lw=1.0, label="Doppler track")
+        #ax.plot(f_path + alo, t_path, color="white", lw=1.0, ls="--")
+        #ax.plot(f_path + ahi, t_path, color="white", lw=1.0, ls="--")
         ax.legend(loc="upper right", fontsize=8, framealpha=0.7)
     ax.set_title("Spectrogram")
-    ax.set_xlabel("time (s)")
-    ax.set_ylabel("frequency (Hz)")
+    ax.set_xlabel("frequency (Hz)")
+    ax.set_ylabel("time (s)")
     return ax
 
 

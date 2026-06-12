@@ -26,7 +26,7 @@ import matplotlib
 matplotlib.use("Agg")        # headless: save figures without a display
 
 import sys as _sys, os as _os
-_sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "classical"))
+_sys.path.insert(0, _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 from pipeline.io import read_tuning_freq
 from pipeline.process_pass import process_pass
 from viz.figures import make_pass_figure
